@@ -164,6 +164,15 @@ except ImportError:
                 config=gen_config
             )
             
+            # Log token usage from Gemini response metadata
+            if hasattr(response, 'usage_metadata') and response.usage_metadata:
+                um = response.usage_metadata
+                logger.info(
+                    f"📊 TOKEN USAGE — Prompt: {getattr(um, 'prompt_token_count', '?')}, "
+                    f"Candidates: {getattr(um, 'candidates_token_count', '?')}, "
+                    f"Total: {getattr(um, 'total_token_count', '?')}"
+                )
+            
             thoughts = ""
             # Capture model internal thought from candidate explanation if available
             if response.candidates and response.candidates[0].content:
