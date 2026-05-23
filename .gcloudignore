@@ -1,0 +1,18 @@
+# Exclude local virtual environment — Docker installs deps from requirements.txt
+venv/
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Exclude local env secrets — passed as Cloud Run env vars at deploy time
+.env
+
+# Exclude test files — not needed in production container
+tests/
+
+# Exclude IDE and system files
+.gemini/
+.DS_Store
+*.log
