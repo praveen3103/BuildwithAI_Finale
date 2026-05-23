@@ -235,27 +235,56 @@ def generate_stadium_svg(stadium_state):
         <text x="{nx}" y="{ny + 3}" text-anchor="middle" fill="#ffffff" font-family="'Inter', sans-serif" font-weight="900" font-size="8px" style="pointer-events: none;">{g_id[-1]}</text>
         """)
         
-        # 3. Draw Info Panel (Text Block) near the gate node
-        anchor = "middle" if align == "middle" else ("end" if align == "end" else "start")
-        dx = 0 if align == "middle" else (14 if align == "start" else -14)
-        dy = 22 if g_id == "Gate 1" else (-15 if g_id == "Gate 3" else 4)
-        
-        tx = nx + dx
-        ty = ny + dy
-        
+        # Label positioning table — well outside the stadium oval per gate
+        label_positions = {
+            "Gate 1": {"lx": 200, "ly": 8,   "anchor": "middle"},   # Above top
+            "Gate 2": {"lx": 398, "ly": 148, "anchor": "end"},      # Far right
+            "Gate 3": {"lx": 200, "ly": 295, "anchor": "middle"},   # Below bottom
+            "Gate 4": {"lx": 2,   "ly": 148, "anchor": "start"},    # Far left
+        }
+        lpos = label_positions.get(g_id, {"lx": nx, "ly": ny - 20, "anchor": "middle"})
+        lx, ly, anchor = lpos["lx"], lpos["ly"], lpos["anchor"]
+
+        # Label text content
+        gate_num = g_id.split()[-1]
+        label_line1 = f"GATE {gate_num}"
+        label_line2 = f"{cnt:,} / {cap:,}"
+        label_line3 = f"{round(pct * 100, 1)}%"
+
+        # Connector line from node to label
         svg_elements.append(f"""
-        <g>
-          <!-- Small shadow behind labels -->
-          <text x="{tx}" y="{ty}" text-anchor="{anchor}" class="gate-title" stroke="#0b0f19" stroke-width="3" paint-order="stroke">{g_id.upper()}</text>
-          <text x="{tx}" y="{ty}" text-anchor="{anchor}" class="gate-title">{g_id.upper()}</text>
-          
-          <text x="{tx}" y="{ty + 12}" text-anchor="{anchor}" class="gate-value" stroke="#0b0f19" stroke-width="3" paint-order="stroke">{cnt:,} / {cap:,}</text>
-          <text x="{tx}" y="{ty + 12}" text-anchor="{anchor}" class="gate-value">{cnt:,} <tspan class="gate-percent" fill="{pct_color}">({round(pct * 100, 1)}%)</tspan></text>
-        </g>
+        <line x1="{nx}" y1="{ny}" x2="{lx}" y2="{ly + 8}"
+              stroke="{color}" stroke-width="1" stroke-opacity="0.4" stroke-dasharray="3 2" />
         """)
-        
+
+        # Dark background pill badge behind label
+        badge_w = 80
+        badge_h = 36
+        if anchor == "middle":
+            bx = lx - badge_w // 2
+        elif anchor == "end":
+            bx = lx - badge_w
+        else:
+            bx = lx
+
+        by = ly - 4
+
+        svg_elements.append(f"""
+        <rect x="{bx}" y="{by}" width="{badge_w}" height="{badge_h}"
+              rx="6" ry="6"
+              fill="#0d1117" fill-opacity="0.92"
+              stroke="{color}" stroke-width="1.2" stroke-opacity="0.7" />
+        <text x="{lx}" y="{by + 12}" text-anchor="{anchor}"
+              font-family="'Inter', sans-serif" font-weight="700" font-size="9"
+              fill="#9ca3af" letter-spacing="1">{label_line1}</text>
+        <text x="{lx}" y="{by + 24}" text-anchor="{anchor}"
+              font-family="'Inter', sans-serif" font-weight="700" font-size="10"
+              fill="#f3f4f6">{label_line2} <tspan fill="{pct_color}" font-size="9">({label_line3})</tspan></text>
+        """)
+
     svg_elements.append("</svg>")
     return "\n".join(svg_elements)
+
 
 # Fetch state data from FastAPI
 @st.fragment
