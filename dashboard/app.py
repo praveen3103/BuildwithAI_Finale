@@ -2,6 +2,7 @@ import os
 import time
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 
 # Set page configuration for a premium stadium console look
@@ -403,7 +404,18 @@ with col_monitors:
     
     # Stadium Visual Map
     st.markdown("##### 🗺️ Dynamic Visual Stadium Map")
-    st.markdown(generate_stadium_svg(stadium_state), unsafe_allow_html=True)
+    svg_content = generate_stadium_svg(stadium_state)
+    # Wrap in a full HTML doc so defs/gradients/animations render correctly inside components iframe
+    html_content = f"""
+    <!DOCTYPE html>
+    <html><head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@800&display=swap" rel="stylesheet">
+    <style>body {{ margin: 0; padding: 0; background: transparent; }}</style>
+    </head><body>
+    {svg_content}
+    </body></html>
+    """
+    components.html(html_content, height=310, scrolling=False)
     
     # Gate Capacity Dashboard
     st.markdown("##### 🚪 Gate Ingress Capacity Monitor")
