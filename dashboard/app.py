@@ -92,6 +92,170 @@ st.markdown("<h1>Stadium Crowd Command & Emergency Orchestrator</h1>", unsafe_al
 st.markdown("##### <span class='glow-header'>Autonomous Crowd Risk Mitigation & Multi-Agent Tactical Response Engine</span>", unsafe_allow_html=True)
 st.write("---")
 
+def generate_stadium_svg(stadium_state):
+    gates = stadium_state.get("gates", {})
+    
+    # Map gates to coordinates
+    gate_coords = {
+        "Gate 1": {"node": (200, 30), "align": "middle"},
+        "Gate 2": {"node": (370, 150), "align": "end"},
+        "Gate 3": {"node": (200, 270), "align": "middle"},
+        "Gate 4": {"node": (30, 150), "align": "start"}
+    }
+    
+    svg_elements = []
+    
+    # SVG Definition & Styles
+    svg_elements.append("""
+    <svg viewBox="0 0 400 300" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="background-color: #0b0f19; border-radius: 12px; border: 1px solid #1f2937; box-shadow: inset 0 0 20px rgba(0,0,0,0.6); margin-bottom: 20px;">
+      <defs>
+        <!-- Gradients -->
+        <radialGradient id="fieldGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#14532d" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#0f2d1a" stop-opacity="0.9"/>
+        </radialGradient>
+        <radialGradient id="stadiumGlow" cx="50%" cy="50%" r="60%">
+          <stop offset="70%" stop-color="#111827" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#030712" stop-opacity="0.8"/>
+        </radialGradient>
+        <!-- Glow filters -->
+        <filter id="glow-red" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <filter id="glow-amber" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <filter id="glow-green" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      
+      <style>
+        @keyframes pulse {
+          0% { r: 10px; opacity: 1; }
+          50% { r: 16px; opacity: 0.5; }
+          100% { r: 10px; opacity: 1; }
+        }
+        .pulse-effect {
+          animation: pulse 1.8s infinite ease-in-out;
+        }
+        .gate-title {
+          font-family: 'Inter', sans-serif;
+          font-weight: 700;
+          font-size: 10px;
+          fill: #9ca3af;
+        }
+        .gate-value {
+          font-family: 'Inter', sans-serif;
+          font-weight: 700;
+          font-size: 12px;
+          fill: #f3f4f6;
+        }
+        .gate-percent {
+          font-family: 'Inter', sans-serif;
+          font-size: 9px;
+        }
+        .stadium-label {
+          font-family: 'Outfit', 'Inter', sans-serif;
+          font-weight: 800;
+          font-size: 11px;
+          fill: #4b5563;
+          letter-spacing: 2px;
+        }
+      </style>
+      
+      <!-- Outer Stadium Structure -->
+      <ellipse cx="200" cy="150" rx="175" ry="115" fill="none" stroke="#1f2937" stroke-width="6" />
+      <ellipse cx="200" cy="150" rx="175" ry="115" fill="url(#stadiumGlow)" />
+      
+      <!-- Stand Seating Tiers (Visual Accent Lines) -->
+      <ellipse cx="200" cy="150" rx="160" ry="102" fill="none" stroke="#111827" stroke-width="1.5" stroke-dasharray="8 6" />
+      <ellipse cx="200" cy="150" rx="150" ry="92" fill="none" stroke="#1f2937" stroke-width="1" />
+      
+      <!-- Cricket Field (Outfield) -->
+      <ellipse cx="200" cy="150" rx="130" ry="78" fill="url(#fieldGlow)" stroke="#22c55e" stroke-width="2" stroke-opacity="0.3" />
+      
+      <!-- Wickets & Pitch Boundary (Inner Ring) -->
+      <ellipse cx="200" cy="150" rx="90" ry="50" fill="none" stroke="#22c55e" stroke-width="1" stroke-opacity="0.15" stroke-dasharray="4 4" />
+      
+      <!-- Cricket Pitch -->
+      <rect x="193" y="132" width="14" height="36" rx="1" fill="#b45309" fill-opacity="0.75" stroke="#d97706" stroke-width="0.75" />
+      <!-- Crease/Wicket markings -->
+      <line x1="193" y1="136" x2="207" y2="136" stroke="#fef08a" stroke-width="0.75" opacity="0.6" />
+      <line x1="193" y1="164" x2="207" y2="164" stroke="#fef08a" stroke-width="0.75" opacity="0.6" />
+      
+      <!-- Stadium Label -->
+      <text x="200" y="105" text-anchor="middle" class="stadium-label">CRICKET ARENA</text>
+    """)
+    
+    # Render Gates and labels dynamically
+    for g_id, data in gates.items():
+        cap = data["capacity"]
+        cnt = data["crowd_count"]
+        pct = cnt / cap
+        status = data["status"]
+        
+        # Determine status colors and classes
+        if status == "BOTTLENECK" or pct >= 0.95:
+            color = "#ef4444"
+            glow_filter = "url(#glow-red)"
+            pulse_class = "pulse-effect"
+            pct_color = "#f87171"
+        elif pct >= 0.8:
+            color = "#f59e0b"
+            glow_filter = "url(#glow-amber)"
+            pulse_class = ""
+            pct_color = "#fbbf24"
+        else:
+            color = "#10b981"
+            glow_filter = "url(#glow-green)"
+            pulse_class = ""
+            pct_color = "#34d399"
+            
+        coords = gate_coords.get(g_id)
+        if not coords:
+            continue
+            
+        nx, ny = coords["node"]
+        align = coords["align"]
+        
+        # 1. Draw glowing pulser if bottlenecked
+        if pulse_class:
+            svg_elements.append(f"""
+            <circle cx="{nx}" cy="{ny}" r="15" fill="{color}" fill-opacity="0.3" class="{pulse_class}" />
+            """)
+            
+        # 2. Draw Main Gate Node Circle
+        svg_elements.append(f"""
+        <circle cx="{nx}" cy="{ny}" r="10" fill="{color}" stroke="#ffffff" stroke-width="1.5" filter="{glow_filter}" style="cursor: pointer;" />
+        <text x="{nx}" y="{ny + 3}" text-anchor="middle" fill="#ffffff" font-family="'Inter', sans-serif" font-weight="900" font-size="8px" style="pointer-events: none;">{g_id[-1]}</text>
+        """)
+        
+        # 3. Draw Info Panel (Text Block) near the gate node
+        anchor = "middle" if align == "middle" else ("end" if align == "end" else "start")
+        dx = 0 if align == "middle" else (14 if align == "start" else -14)
+        dy = 22 if g_id == "Gate 1" else (-15 if g_id == "Gate 3" else 4)
+        
+        tx = nx + dx
+        ty = ny + dy
+        
+        svg_elements.append(f"""
+        <g>
+          <!-- Small shadow behind labels -->
+          <text x="{tx}" y="{ty}" text-anchor="{anchor}" class="gate-title" stroke="#0b0f19" stroke-width="3" paint-order="stroke">{g_id.upper()}</text>
+          <text x="{tx}" y="{ty}" text-anchor="{anchor}" class="gate-title">{g_id.upper()}</text>
+          
+          <text x="{tx}" y="{ty + 12}" text-anchor="{anchor}" class="gate-value" stroke="#0b0f19" stroke-width="3" paint-order="stroke">{cnt:,} / {cap:,}</text>
+          <text x="{tx}" y="{ty + 12}" text-anchor="{anchor}" class="gate-value">{cnt:,} <tspan class="gate-percent" fill="{pct_color}">({round(pct * 100, 1)}%)</tspan></text>
+        </g>
+        """)
+        
+    svg_elements.append("</svg>")
+    return "\n".join(svg_elements)
+
 # Fetch state data from FastAPI
 @st.fragment
 def load_data():
@@ -236,6 +400,10 @@ with col_monitors:
         </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Stadium Visual Map
+    st.markdown("##### 🗺️ Dynamic Visual Stadium Map")
+    st.markdown(generate_stadium_svg(stadium_state), unsafe_allow_html=True)
     
     # Gate Capacity Dashboard
     st.markdown("##### 🚪 Gate Ingress Capacity Monitor")
